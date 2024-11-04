@@ -2,6 +2,7 @@ import random
 from typing import Union
 from faker import Faker
 from pydantic import BaseModel, UUID4
+from random_address import real_random_address
 
 fake = Faker("es_ES")
 
@@ -16,7 +17,7 @@ class Person(BaseModel):
     address_line2: Union[str, None]
     city: str
     state: str
-    country: str
+    country: Union[str, None]
     email_id: str
 
 
@@ -27,16 +28,27 @@ class SynthethicData:
         self.data = self._generate_synthetic_data()
 
     def _generate_single_record(self):
+        us_address = real_random_address()
+        address_line1 = us_address.get("address1")
+        address_line2 = us_address.get("address2")
+        us_city = us_address.get("city")
+        us_state = us_address.get("state")
+        zip = us_address.get("postalCode")
         person = Person(
             id=fake.uuid4(),
             first_name=fake.first_name(),
-            last_name=random.choice([None, fake.last_name()]),
-            date_of_birth=fake.date_of_birth().strftime("%Y-%m-%d"),
-            address_line1=fake.street_address(),
-            address_line2=random.choice([None, fake.street_address()]),
-            city=fake.city(),
-            state=fake.state(),
-            country=random.choice([ None,fake.country_code()]),
+            last_name=random.choice([None, fake.last_name()]),  # None | <value>
+            date_of_birth=random.choice(
+                [
+                    fake.date_of_birth().strftime("%Y-%m-%d"),  # YYYY-MM-DD
+                    fake.date_of_birth().strftime("%m-%d-%Y"),  # MM-DD-YYYY
+                ]
+            ),
+            address_line1=address_line1,
+            address_line2=address_line2,
+            city=us_city,
+            state=us_state,
+            country=random.choice([None, "US", "USA"]),  # None | US | USA
             email_id=fake.email(),
         )
         return person.__dict__
