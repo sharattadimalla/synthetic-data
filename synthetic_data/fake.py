@@ -1,35 +1,17 @@
 import random
-from typing import Union
 from faker import Faker
-from pydantic import BaseModel, UUID4
+from model import Person
 from random_address import real_random_address
-import pandas as pd
-from ctgan import CTGAN
-from sdv.single_table import CTGANSynthesizer
-from sdv.metadata import Metadata
+import logging
 
+logger = logging.getLogger()
 fake = Faker("es_ES")
 
 
-# your pydantic model
-class Person(BaseModel):
-    id: UUID4
-    first_name: Union[str]
-    last_name: Union[str, None]
-    date_of_birth: Union[str, None]
-    address_line1: Union[str]
-    address_line2: Union[str, None]
-    city: str
-    state: str
-    country: Union[str, None]
-    email_id: str
-
-
 class SynthethicData:
-
-    def __init__(self, num_records: int, method: str):
+    def __init__(self, num_records: int):
+        print("INFO: Initializing SyntheticData class")
         self.num_records = num_records
-        self.method = method
         self.data = self._generate_synthetic_data()
 
     def _generate_single_record(self):
@@ -59,17 +41,7 @@ class SynthethicData:
         )
         return person.__dict__
 
-    def _generate_ctgan_sample(self):
-        df = pd.read_csv("output/customer_synthetic_data.csv")
-        metadata = Metadata.detect_from_dataframe(data=df, table_name="employee")
-        synthesizer = CTGANSynthesizer(metadata)
-        synthesizer.fit(df)
-        synthetic_data = synthesizer.sample(num_rows=self.num_records)
-        return synthetic_data
-
     def _generate_synthetic_data(self):
-        if self.method == "faker":
-            data = [self._generate_single_record() for x in range(self.num_records)]
-        elif self.method == "ctgan":
-            data = self._generate_ctgan_sample()
+        data = [self._generate_single_record() for x in range(self.num_records)]
+        print(f"INFO: Generated {self.num_records} of SyntheticData using Faker")
         return data
